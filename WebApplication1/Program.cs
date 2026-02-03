@@ -1,49 +1,59 @@
+using System.Numerics;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Bind PORT for Render
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 var app = builder.Build();
 
 app.MapGet("/maxim_azarov1_gmail_com", (string? x, string? y) =>
 {
-    // Validate input
-    if (!IsNaturalNumber(x, out var a) || !IsNaturalNumber(y, out var b))
-    {
+    if (!TryParseNatural(x, out var a) || !TryParseNatural(y, out var b))
         return Results.Text("NaN", "text/plain");
-    }
 
-    var result = CalculateLcm(a, b);
-    return Results.Text(result.ToString(), "text/plain");
+    var lcm = Lcm(a, b);
+    return Results.Text(lcm.ToString(), "text/plain");
 });
-
-var port = Environment.GetEnvironmentVariable("PORT");
-if (!string.IsNullOrEmpty(port))
-{
-    app.Urls.Add($"http://0.0.0.0:{port}");
-}
 
 app.Run();
 
-return;
-
-static bool IsNaturalNumber(string? value, out long number)
+static bool TryParseNatural(string? value, out BigInteger number)
 {
-    if (!long.TryParse(value, out number))
+    number = BigInteger.Zero;
+
+    if (string.IsNullOrEmpty(value))
         return false;
 
+    // Strict: digits only
+    foreach (char c in value)
+    {
+        if (c < '0' || c > '9')
+            return false;
+    }
+
+    number = BigInteger.Parse(value);
     return number > 0;
 }
 
-static long CalculateLcm(long x, long y)
+static BigInteger Gcd(BigInteger a, BigInteger b)
 {
-    return x / CalculateGcd(x, y) * y;
+    while (b != 0)
+    {
+        var r = a % b;
+        a = b;
+        b = r;
+    }
+    return a;
 }
 
-static long CalculateGcd(long x, long y)
+static BigInteger Lcm(BigInteger a, BigInteger b)
 {
-    while (y != 0)
-    {
-        var remainder = x % y;
-        x = y;
-        y = remainder;
-    }
-
-    return x;
+    return (a / Gcd(a, b)) * b;
 }
