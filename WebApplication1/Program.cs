@@ -13,7 +13,14 @@ app.MapGet("/maxim_azarov1_gmail_com", (string? x, string? y) =>
     return Results.Text(result.ToString(), "text/plain");
 });
 
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
+{
+    app.Urls.Add($"http://0.0.0.0:{port}");
+}
+
 app.Run();
+
 return;
 
 static bool IsNaturalNumber(string? value, out long number)
